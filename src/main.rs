@@ -3,13 +3,11 @@ extern crate rustc_serialize;
 
 extern crate router;
 
-
 use iron::prelude::*;
-use iron::{Handler};
-use iron::status;
 use router::Router;
-use rustc_serialize::json;
-use std::io::Read;
+
+mod hello_world;
+mod set_greeting;
 
 #[derive(RustcEncodable, RustcDecodable)]
 struct Greeting {
@@ -19,9 +17,10 @@ struct Greeting {
 fn main() {
     let mut router = Router::new();
 
-    router.get("/", hello_world, "hello_world");
-    router.post("/set", set_greeting, "set_greeting");
+    router.get("/", hello_world::hello_world, "hello_world");
+    router.post("/set", set_greeting::set_greeting, "set_greeting");
 
+    /*
     fn hello_world(_: &mut Request) -> IronResult<Response> {
         let greeting = Greeting {
             msg: "Hello, world".to_string()
@@ -41,6 +40,7 @@ fn main() {
         Ok(Response::with((status::Ok, payload)))
 
     }
+    */
 
     Iron::new(router).http("localhost:3000").unwrap();
     println!("on 3000");
