@@ -24,6 +24,7 @@ fn main() {
             msg: "Hello, world".to_string()
         };
         let payload = json::encode(&greeting).unwrap();
+        println!("{}", payload);
         Ok(Response::with((status::Ok, payload)))
     }
 
@@ -33,9 +34,10 @@ fn main() {
         let request: Greeting = json::decode(&payload).unwrap();
         let greeting = Greeting { msg: request.msg };
         let payload = json::encode(&greeting).unwrap();
+        println!("{}", payload);
         Ok(Response::with((status::Ok, payload)))
     }
 
-    Iron::new(hello_world).http("localhost:3000").unwrap();
+    Iron::new(router).http("localhost:3000").unwrap();
     println!("on 3000");
 }
