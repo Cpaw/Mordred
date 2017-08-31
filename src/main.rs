@@ -1,8 +1,11 @@
 extern crate iron;
 extern crate rustc_serialize;
+
 extern crate router;
 
+
 use iron::prelude::*;
+use iron::{Handler};
 use iron::status;
 use router::Router;
 use rustc_serialize::json;
@@ -36,6 +39,7 @@ fn main() {
         let payload = json::encode(&greeting).unwrap();
         println!("{}", payload);
         Ok(Response::with((status::Ok, payload)))
+
     }
 
     Iron::new(router).http("localhost:3000").unwrap();
