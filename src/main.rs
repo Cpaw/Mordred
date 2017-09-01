@@ -10,6 +10,7 @@ mod hello_world;
 mod set_greeting;
 
 
+//mod sql;
 /*
 #[derive(RustcEncodable, RustcDecodable)]
 struct Greeting {
@@ -19,11 +20,13 @@ struct Greeting {
 extern crate postgres;
 use postgres::{Connection, TlsMode};
 
-struct Counter {
+/*struct Counter {
     id: i32,
     counter: i16,
-}
+}*/
 
+mod sql;
+use sql::*;
 
 fn main() {
     /*
@@ -70,13 +73,17 @@ fn main() {
            }
        };
 
+       //create_schema(&conn);
+       create_hoge_table(&conn);
+/*
        // Create Table
        conn.execute("CREATE TABLE hoge (
          id SERIAL,
          hoge SMALLINT NOT NULL DEFAULT 0
          )",
-       &[]).unwrap();
+       &[]).unwrap();*/
 
+/*
        // Counter type
        let me = Counter {
            id: 0,
@@ -102,5 +109,12 @@ fn main() {
            };
            println!("Found hoge {}", counter.counter);
        }
+*/
+
+
+
+
+
+
 
 }
