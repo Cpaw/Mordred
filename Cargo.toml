@@ -7,5 +7,7 @@ authors = ["palloc <palloc.mknet10@gmail.com>"]
 iron = "*"
 rustc-serialize = "*"
 router = "*"
+postgres = "*"
 iron-sessionstorage = "0.6.6"
 urlencoded = "0.5.0"
+

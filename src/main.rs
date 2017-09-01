@@ -19,6 +19,36 @@ use iron::prelude::*;
 mod hello_world;
 mod set_greeting;
 
+
+extern crate postgres;
+use postgres::{Connection, TlsMode};
+
+mod sql;
+use sql::*;
+
+
+
+#[macro_use] extern crate iron;
+#[macro_use] extern crate router;
+extern crate rustc_serialize;
+extern crate urlencoded;
+extern crate iron_sessionstorage;
+
+use iron::status;
+use iron::modifiers::Redirect;
+
+use iron_sessionstorage::traits::*;
+use iron_sessionstorage::SessionStorage;
+use iron_sessionstorage::backends::SignedCookieBackend;
+
+use urlencoded::UrlEncodedBody;
+
+use iron::prelude::*;
+//use router::Router;
+
+mod hello_world;
+mod set_greeting;
+
 struct Login {
     username: String
 }
@@ -110,4 +140,18 @@ fn main() {
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let _res = Iron::new(ch).http("localhost:3000").unwrap();
     println!("on 3000");
+
+
+    //PostgreSQL
+    let dsn = "postgres://dev:secret@localhost";
+       let conn = match Connection::connect(dsn, TlsMode::None) {
+           Ok(conn) => conn,
+           Err(e) => {
+               println!("Connection error: {}", e);
+               return;
+           }
+       };
+
+
+    create_hoge_table(&conn);
 }
