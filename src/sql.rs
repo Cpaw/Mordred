@@ -10,7 +10,7 @@ extern crate postgres;
 use postgres::{Connection, TlsMode};
 
 
-pub struct User {
+pub struct Userdata {
     pub username: String,
     pub password: String,
     pub score: i16,
@@ -25,14 +25,9 @@ pub struct Question{
 
 
 
-
-/*
 pub fn database_init(conn: &postgres::Connection){
-    //create shema
-    conn.execute("CREATE SCHEMA compe", &[]).unwrap();
-
-    //create table ()
-}*/
+    //create table (userdata)
+}
 
 pub fn create_hoge_table(conn:  &postgres::Connection) {
     // Create Table
