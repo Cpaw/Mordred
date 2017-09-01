@@ -80,17 +80,17 @@ fn login(req: &mut Request) -> IronResult<Response> {
 
 // ユーザログイン
 fn login_post(req: &mut Request) -> IronResult<Response> {
-    let username = {
+    let (username, password) = {
         let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
-        iexpect!(formdata.get("username"))[0].to_owned()
+        (iexpect!(formdata.get("username"))[0].to_owned(), iexpect!(formdata.get("password"))[0].to_owned())
     };
 
     // postgreのコネクション作成
     let dsn = "postgres://dev:secret@localhost";
-    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();
 
     let mut status: bool = false;
-    if is_user_exists(&conn, username.to_string()){
+    if is_user_exists(&conn, username.to_string(), password.to_string()){
         try!(req.session().set(Login { username: username }));
         status = true;
     }
@@ -224,13 +224,13 @@ fn main() {
     insert_question(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
 
 
-    let res = is_user_exists(&conn, "山田".to_string());
+//    let res = is_user_exists(&conn, "山田".to_string());
 
-    if res == true{
-        println!("登録済み");
-    }else{
-        println!("いないよ");
-    }
+//    if res == true{
+//        println!("登録済み");
+//    }else{
+//        println!("いないよ");
+//    }
 
 
     let id: i32 = 1;

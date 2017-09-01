@@ -57,9 +57,9 @@ pub fn insert_question(conn: &postgres::Connection, title: String, sentence: Str
 
 
 //ユーザー情報取り出し(比較部分で使う)
-pub fn is_user_exists(conn: &postgres::Connection, user: String)-> bool {
+pub fn is_user_exists(conn: &postgres::Connection, user: String, pass: String)-> bool {
     //ユーザー名は重複しない
-    for row in &conn.query("SELECT username FROM userdata WHERE username = $1", &[&user]).unwrap() {
+    for row in &conn.query("SELECT username FROM userdata WHERE username = $1 AND password = $2", &[&user, &pass]).unwrap() {
         return true;
     }
     false
