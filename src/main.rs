@@ -6,93 +6,107 @@ extern crate iron_sessionstorage;
 
 use iron::status;
 use iron::modifiers::Redirect;
+use router::{Router, url_for};
 
 use iron_sessionstorage::traits::*;
 use iron_sessionstorage::SessionStorage;
 use iron_sessionstorage::backends::SignedCookieBackend;
 
 use urlencoded::UrlEncodedBody;
-
+use iron::headers::ContentType;
 use iron::prelude::*;
-//use router::Router;
-
-mod hello_world;
-mod set_greeting;
 
 extern crate postgres;
 use postgres::{Connection, TlsMode};
 
 mod sql;
 use sql::*;
+mod hello_world;
+mod set_greeting;
 
 
-struct Login {
-    username: String
-}
-
-// ハッシュ管理
-impl iron_sessionstorage::Value for Login {
-    fn get_key() -> &'static str { "logged_in_user" }
-    fn into_raw(self) -> String { self.username }
-    fn from_raw(value: String) -> Option<Self> {
-        if value.is_empty() {
-            None
-        } else {
-            Some(Login { username: value })
-        }
-    }
+struct User {
+    name: String
 }
 
 // ログイン処理
 fn login(req: &mut Request) -> IronResult<Response> {
+    let status = "ok".to_string();
     Ok(Response::with((
+        ContentType::json().0,
         status::Ok,
         "text/html".parse::<iron::mime::Mime>().unwrap(),
-
+        format!("{{\"status\": {}}}", status)
         // ログインしているかどうか確認する処理を書く
-
     )))
 }
 
-
 // ユーザログイン                       
 fn login_post(req: &mut Request) -> IronResult<Response> {
-    let username = {
-        let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
-        iexpect!(formdata.get("username"))[0].to_owned()
-    };
-
-    try!(req.session().set(Login { username: username }));
-    Ok(Response::with((status::Found, Redirect(url_for!(req, "greet")))))
+    Ok(Response::with((
+        status::Ok,
+        format!("test")
+    )))
 }
 
 // ログアウト
 fn logout(req: &mut Request) -> IronResult<Response> {
-    try!(req.session().clear());
-    Ok(Response::with((status::Found, Redirect(url_for!(req, "greet")))))
+    Ok(Response::with((
+        status::Ok,
+        format!("test")
+    )))
 }
 
 // ユーザ登録
 fn register(req: &mut Request) -> IronResult<Response> {
+    Ok(Response::with((
+        status::Ok,
+        format!("test")
+    )))
 }
 
 // 問題一覧
 fn problems(req: &mut Request) -> IronResult<Response> {
+    Ok(Response::with((
+        status::Ok,
+        format!("test")
+    )))
 }
 
 // 問題詳細
-fn problem(req: &mut Request) -> IronReslt<Response> {
+fn problem(req: &mut Request) -> IronResult<Response> {
     let ref router = req.extensions.get::<Router>();
     let ref problem_id = router
         .unwrap()
         .find("id")
         .unwrap();
-
+    
     return Ok(Response::with(
         (status::Ok,
-         format!("Hello {}", name).as_str())
+         format!("Hello {}", problem_id).as_str()
+        )))
 }
 
+// 問題回答
+fn answer(req: &mut Request) -> IronResult<Response> {
+    let ref router = req.extensions.get::<Router>();
+    let ref problem_id = router
+        .unwrap()
+        .find("id")
+        .unwrap();
+    
+    Ok(Response::with((
+        status::Ok,
+        format!("test")
+    )))
+}    
+              
+fn user(req: &mut Request) -> IronResult<Response>{
+    Ok(Response::with((
+        status::Ok,
+        format!("test")
+    )))
+}
 
 fn main() {
     // ルーティング作成
@@ -100,11 +114,11 @@ fn main() {
         login: get "/login" => login,
         login_post: post "/login" => login_post,
         logout: post "/logout" => logout,
-        regist: post "/regist" => regist,
+        regist: post "/regist" => register,
         user: get "/user" => user,
         problems: get "/problems" => problems,
         problem: get "/problem/:id" => problem,
-        
+        answer: post "/problem/:id" => answer,
     );
 
     let my_secret = b"verysecret".to_vec();
@@ -115,15 +129,15 @@ fn main() {
 
 
     //PostgreSQL
-    let dsn = "postgres://dev:secret@localhost";
-       let conn = match Connection::connect(dsn, TlsMode::None) {
-           Ok(conn) => conn,
-           Err(e) => {
-               println!("Connection error: {}", e);
-               return;
-           }
-       };
+//    let dsn = "postgres://dev:secret@localhost";
+//       let conn = match Connection::connect(dsn, TlsMode::None) {
+//           Ok(conn) => conn,
+//           Err(e) => {
+//              println!("Connection error: {}", e);
+//               return;
+//           }
+//       };
 
 
-    create_hoge_table(&conn);
+//    create_hoge_table(&conn);
 }
