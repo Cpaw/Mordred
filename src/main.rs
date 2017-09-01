@@ -1,10 +1,10 @@
 extern crate iron;
 extern crate rustc_serialize;
 
-extern crate router;
+#[macro_use] extern crate router;
 
 use iron::prelude::*;
-use router::Router;
+//use router::Router;
 
 mod hello_world;
 mod set_greeting;
@@ -15,32 +15,16 @@ struct Greeting {
 }
 
 fn main() {
-    let mut router = Router::new();
+//    let mut router = Router::new();
 
-    router.get("/", hello_world::hello_world, "hello_world");
-    router.post("/set", set_greeting::set_greeting, "set_greeting");
+    let router = router!(
+        hello_world: get"/" => hello_world::hello_world,
+        greet: post"/set" => set_greeting::set_greeting,
+    );
 
-    /*
-    fn hello_world(_: &mut Request) -> IronResult<Response> {
-        let greeting = Greeting {
-            msg: "Hello, world".to_string()
-        };
-        let payload = json::encode(&greeting).unwrap();
-        println!("{}", payload);
-        Ok(Response::with((status::Ok, payload)))
-    }
+//    router.get("/", hello_world::hello_world, "hello_world");
+//    router.post("/set", set_greeting::set_greeting, "set_greeting");
 
-    fn set_greeting(request: &mut Request) -> IronResult<Response> {
-        let mut payload = String::new();
-        request.body.read_to_string(&mut payload).unwrap();
-        let request: Greeting = json::decode(&payload).unwrap();
-        let greeting = Greeting { msg: request.msg };
-        let payload = json::encode(&greeting).unwrap();
-        println!("{}", payload);
-        Ok(Response::with((status::Ok, payload)))
-
-    }
-    */
 
     Iron::new(router).http("localhost:3000").unwrap();
     println!("on 3000");
