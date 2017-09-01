@@ -78,7 +78,7 @@ fn login(req: &mut Request) -> IronResult<Response> {
     )))
 }
 
-// ユーザログイン                       
+// ユーザログイン
 fn login_post(req: &mut Request) -> IronResult<Response> {
     let username = {
         let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
@@ -126,7 +126,7 @@ fn problem(req: &mut Request) -> IronResult<Response> {
         .unwrap()
         .find("id")
         .unwrap();
-    
+
     return Ok(Response::with(
         (status::Ok,
          format!("Hello {}", problem_id).as_str()
@@ -156,7 +156,7 @@ fn answer(req: &mut Request) -> IronResult<Response> {
         format!("test")
     )))
 }
-              
+
 fn user(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((
         status::Ok,
@@ -195,15 +195,16 @@ fn main() {
      };
 
     //database_init(&conn);
-    let username = "山田".to_string();
-    let password = "hage".to_string();
-    insert_userdata(&conn, username, password);
 
-    let title = "うあああああああ".to_string();
-    let sentence = "hogehogehogehoge".to_string();
-    let score = 10;
-    let accuracy = 20;
-    insert_question(&conn, title, sentence, score, accuracy);
+    insert_userdata(&conn, "金田".to_string(), "gomigomi".to_string());
+    insert_userdata(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
+    insert_userdata(&conn, "吉岡".to_string(), "1234567890".to_string());
+
+
+
+
+    insert_question(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
+
 
     let res = is_user_exists(&conn, "山田".to_string());
 
@@ -212,4 +213,9 @@ fn main() {
     }else{
         println!("いないよ");
     }
+
+
+    let id: i32 = 1;
+    let username = "山田".to_string();
+    add_score(&conn, id, username);
 }
