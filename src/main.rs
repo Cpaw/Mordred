@@ -1,13 +1,24 @@
-extern crate iron;
+#[macro_use] extern crate iron;
+#[macro_use] extern crate router;
 extern crate rustc_serialize;
+extern crate urlencoded;
+extern crate iron_sessionstorage;
 
-extern crate router;
+use iron::status;
+use iron::modifiers::Redirect;
+
+use iron_sessionstorage::traits::*;
+use iron_sessionstorage::SessionStorage;
+use iron_sessionstorage::backends::SignedCookieBackend;
+
+use urlencoded::UrlEncodedBody;
 
 use iron::prelude::*;
-use router::Router;
+//use router::Router;
 
 mod hello_world;
 mod set_greeting;
+
 
 extern crate postgres;
 use postgres::{Connection, TlsMode};
