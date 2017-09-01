@@ -112,21 +112,22 @@ fn problem(req: &mut Request) -> IronResult<Response> {
 
 // 問題回答
 fn answer(req: &mut Request) -> IronResult<Response> {
-//    let ref router = req.extensions.get::<Router>();
     let mut payload = String::new();
-    let json_body = req.get::<bodyparser::Json>();
+    {
+        let ref router = &req.extensions.get::<Router>();
+        let ref problem_id = router
+            .unwrap()
+            .find("id")
+            .unwrap();
+        
+        //受け取ったデータをstringでpayloadに格納
+        req.body.read_to_string(&mut payload);
+        let v: Value = serde_json::to_value(payload);
+    }
+
+    let mut json_body = &mut req.get::<bodyparser::Json>();
     println!("{:?}", json_body);
-    
-//    let ref problem_id = router
-//        .unwrap()
-//        .find("id")
-//        .unwrap();
 
-    //受け取ったデータをstringでpayloadに格納
-//    req.body.read_to_string(&mut payload);
-//    let v: Value = serde_json::to_value(payload);
-
-//    println!("{}", v);
     Ok(Response::with((
         status::Ok,
         format!("test")
@@ -139,9 +140,6 @@ fn user(req: &mut Request) -> IronResult<Response> {
         format!("test")
     )))
 }
-*/
-
-
 
 fn main() {
     // ルーティング作成
@@ -160,7 +158,7 @@ fn main() {
     let mut ch = Chain::new(router);
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let _res = Iron::new(ch).http("localhost:3000").unwrap();
-    println!("on 3000");*/
+    println!("on 3000");
 
 
     //PostgreSQL
@@ -184,9 +182,7 @@ fn main() {
     let accuracy = 20;
     insert_question(&conn, title, sentence, score, accuracy);
 
-
-
-    let res = select_userdata(&conn, "山田".to_string());
+    let res = is_user_exists(&conn, "山田".to_string());
 
     if res == true{
         println!("登録済み");
