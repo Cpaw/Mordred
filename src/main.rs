@@ -39,8 +39,8 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::process;
 
-struct User {
-    name: String
+struct Login {
+    username: String
 }
 
 
@@ -52,31 +52,54 @@ struct Problem {
     p5: u16,
 }
 
+// セッション情報
+impl iron_sessionstorage::Value for Login {
+    fn get_key() -> &'static str { "logged_in_user" }
+    fn into_raw(self) -> String { self.username }
+    fn from_raw(value: String) -> Option<Self> {
+        if value.is_empty() {
+            None
+        } else {
+            Some(Login { username: value })
+        }
+    }
+}
+
 // ログイン処理
 fn login(req: &mut Request) -> IronResult<Response> {
-    let status = "ok".to_string();
+    let mut status: bool = false;
+    if try!(req.session().get::<Login>()).is_some() {
+        status = true;
+    }
     Ok(Response::with((
         ContentType::json().0,
         status::Ok,
-        "text/html".parse::<iron::mime::Mime>().unwrap(),
         format!("{{\"status\": {}}}", status)
-        // ログインしているかどうか確認する処理を書く
     )))
 }
 
 // ユーザログイン                       
 fn login_post(req: &mut Request) -> IronResult<Response> {
+    let username = {
+        let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
+        iexpect!(formdata.get("username"))[0].to_owned()
+    };
+    // ↓の処理をdbのユーザ情報とマッチングしてから実行するようにする
+    try!(req.session().set(Login { username: username }));
+    let mut status: bool = true;
     Ok(Response::with((
         status::Ok,
-        format!("test")
+        format!("{{\"status\": {}}}", status)
     )))
 }
 
 // ログアウト
 fn logout(req: &mut Request) -> IronResult<Response> {
+    try!(req.session().clear());
+    let mut status: bool = true;
     Ok(Response::with((
         status::Ok,
-        format!("test")
+        format!("{{\"status\": {}}}", status)
     )))
 }
 
@@ -146,7 +169,7 @@ fn main() {
     let router = router!(
         login: get "/login" => login,
         login_post: post "/login" => login_post,
-        logout: post "/logout" => logout,
+        logout: get "/logout" => logout,
         regist: post "/regist" => register,
         user: get "/user" => user,
         problems: get "/problems" => problems,
