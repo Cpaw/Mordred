@@ -25,7 +25,7 @@ use postgres::{Connection, TlsMode};
 
 mod sql;
 use sql::*;
-
+/*
 
 
 #[macro_use] extern crate iron;
@@ -124,9 +124,21 @@ fn greet(req: &mut Request) -> IronResult<Response> {
                  </form>", login.username)
     )))
 }
+*/
+
+extern crate csv;
+
+
+#[derive(RustcDecodable,Debug)]
+struct MyRecord {
+    id: i32,
+    x: f32,
+    y: f32,
+}
+
 
 fn main() {
-    let router = router!(
+/*    let router = router!(
         hello_world: get"/" => hello_world::hello_world,
         greet: post"/set" => set_greeting::set_greeting,
         greet: get "/set" => greet,
@@ -139,7 +151,7 @@ fn main() {
     let mut ch = Chain::new(router);
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let _res = Iron::new(ch).http("localhost:3000").unwrap();
-    println!("on 3000");
+    println!("on 3000");*/
 
 
     //PostgreSQL
@@ -149,9 +161,41 @@ fn main() {
            Err(e) => {
                println!("Connection error: {}", e);
                return;
-           }
-       };
+        }
+     };
 
+    //database_init(&conn);
 
-    create_hoge_table(&conn);
+/*
+    let username = "ariake".to_string();
+    let password = "hage".to_string();
+    insert_userdata(&conn, username, password);
+*/
+
+    /*
+    let title = "HYOWAAAAA".to_string();
+    let sentence = "500".to_string();
+    let score = 200;
+    let accuracy = 50;
+    insert_question(&conn, title, sentence, score, accuracy);
+    */
+    let res = select_userdata(&conn, "ariake".to_string());
+
+    if res == true{
+        println!("登録済み");
+    }else{
+        println!("いないよ");
+    }
+
+    /*
+    //CSV
+    let mut rdr = csv::Reader::from_file("./file/test.csv").unwrap().has_headers(true);
+    let mut rows: Vec<MyRecord> = Vec::new();
+    for record in rdr.decode() {
+        if let Ok(r) = record {
+            rows.push(r);
+        }
+    }
+    println!("{:?}", rows);
+    */
 }
