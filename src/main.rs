@@ -85,8 +85,16 @@ fn login_post(req: &mut Request) -> IronResult<Response> {
         iexpect!(formdata.get("username"))[0].to_owned()
     };
     // ↓の処理をdbのユーザ情報とマッチングしてから実行するようにする
-    try!(req.session().set(Login { username: username }));
-    let mut status: bool = true;
+
+    let dsn = "postgres://dev:secret@localhost";
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+
+    let mut status: bool = false;
+    if is_user_exists(&conn, username.to_string()){
+        try!(req.session().set(Login { username: username }));
+        status = true;
+    }
+
     Ok(Response::with((
         status::Ok,
         format!("{{\"status\": {}}}", status)
@@ -142,10 +150,9 @@ fn answer(req: &mut Request) -> IronResult<Response> {
             .unwrap()
             .find("id")
             .unwrap();
-        
+
         //受け取ったデータをstringでpayloadに格納
         req.body.read_to_string(&mut payload);
-        let v: Value = serde_json::to_value(payload);
     }
 
     let mut json_body = &mut req.get::<bodyparser::Json>();
@@ -180,21 +187,21 @@ fn main() {
     let my_secret = b"verysecret".to_vec();
     let mut ch = Chain::new(router);
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
-    let _res = Iron::new(ch).http("localhost:3000").unwrap();
+    let _res = Iron::new(ch).http("0.0.0.0:3000").unwrap();
     println!("on 3000");
 
 
     //PostgreSQL
     let dsn = "postgres://dev:secret@localhost";
-       let conn = match Connection::connect(dsn, TlsMode::None) {
-           Ok(conn) => conn,
-           Err(e) => {
+    let conn = match Connection::connect(dsn, TlsMode::None) {
+        Ok(conn) => conn,
+        Err(e) => {
                println!("Connection error: {}", e);
                return;
         }
      };
 
-    //database_init(&conn);
+    database_init(&conn);
 
     insert_userdata(&conn, "金田".to_string(), "gomigomi".to_string());
     insert_userdata(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
