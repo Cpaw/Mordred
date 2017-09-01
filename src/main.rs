@@ -25,25 +25,12 @@ use postgres::{Connection, TlsMode};
 
 mod sql;
 use sql::*;
+
+
+
+
 /*
 
-
-#[macro_use] extern crate iron;
-#[macro_use] extern crate router;
-extern crate rustc_serialize;
-extern crate urlencoded;
-extern crate iron_sessionstorage;
-
-use iron::status;
-use iron::modifiers::Redirect;
-
-use iron_sessionstorage::traits::*;
-use iron_sessionstorage::SessionStorage;
-use iron_sessionstorage::backends::SignedCookieBackend;
-
-use urlencoded::UrlEncodedBody;
-
-use iron::prelude::*;
 //use router::Router;
 
 mod hello_world;
@@ -126,18 +113,10 @@ fn greet(req: &mut Request) -> IronResult<Response> {
 }
 */
 
-extern crate csv;
-
-
-#[derive(RustcDecodable,Debug)]
-struct MyRecord {
-    id: i32,
-    x: f32,
-    y: f32,
-}
 
 
 fn main() {
+
 /*    let router = router!(
         hello_world: get"/" => hello_world::hello_world,
         greet: post"/set" => set_greeting::set_greeting,
@@ -155,6 +134,7 @@ fn main() {
 
 
     //PostgreSQL
+
     let dsn = "postgres://dev:secret@localhost";
        let conn = match Connection::connect(dsn, TlsMode::None) {
            Ok(conn) => conn,
@@ -165,37 +145,24 @@ fn main() {
      };
 
     //database_init(&conn);
-
-/*
-    let username = "ariake".to_string();
+    let username = "山田".to_string();
     let password = "hage".to_string();
     insert_userdata(&conn, username, password);
-*/
 
-    /*
-    let title = "HYOWAAAAA".to_string();
-    let sentence = "500".to_string();
-    let score = 200;
-    let accuracy = 50;
+
+
+    let title = "うあああああああ".to_string();
+    let sentence = "hogehogehogehoge".to_string();
+    let score = 10;
+    let accuracy = 20;
     insert_question(&conn, title, sentence, score, accuracy);
-    */
-    let res = select_userdata(&conn, "ariake".to_string());
+
+
+
+    let res = select_userdata(&conn, "山田".to_string());
 
     if res == true{
         println!("登録済み");
     }else{
         println!("いないよ");
     }
-
-    /*
-    //CSV
-    let mut rdr = csv::Reader::from_file("./file/test.csv").unwrap().has_headers(true);
-    let mut rows: Vec<MyRecord> = Vec::new();
-    for record in rdr.decode() {
-        if let Ok(r) = record {
-            rows.push(r);
-        }
-    }
-    println!("{:?}", rows);
-    */
-}

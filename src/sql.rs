@@ -2,12 +2,15 @@ extern crate postgres;
 use postgres::{Connection, TlsMode};
 
 
+//scoreはデフォルトで0が入る
 pub struct Userdata{
-    pub score: i16,
     pub username: String,
     pub password: String,
+    pub cookie: String,
+    pub score: i16,
 }
 
+//idは自動採番
 pub struct Question{
     pub id: i16,
     pub title: String,
@@ -17,14 +20,13 @@ pub struct Question{
 }
 
 
-
-
 //データベース初期化(UserdataテーブルとQuestionテーブルの作成)
 pub fn database_init(conn: &postgres::Connection){
     //create table (userdata, question)
     conn.execute("CREATE TABLE userdata(
       username varchar not null unique,
       password varchar not null,
+      cookie varchar,
       score int2 not null default 0
       )",
     &[]).unwrap();
@@ -41,58 +43,29 @@ pub fn database_init(conn: &postgres::Connection){
 
 
 //ユーザーデータの登録
-pub fn insert_userdata(conn: &postgres::Connection, user: String, pass: String) {
-    let data = Userdata{
-        username: user,
-        password: pass,
-        score: 0
-    };
-
+pub fn insert_userdata(conn: &postgres::Connection, username: String, password: String) {
     let rows_updated = conn.execute(
         "INSERT INTO userdata (username, password) VALUES ($1, $2)",
-         &[&data.username, &data.password]).unwrap();
+         &[&username, &password]).unwrap();
 
-    println!("{} rows updated", rows_updated);
+    //println!("{} rows updated", rows_updated);
 }
 
 //問題の登録
-pub fn insert_question(conn: &postgres::Connection, tite: String, sent: String, scor: i16, accu: i16) {
-    let data = Question {
-        id: 0,
-        title: tite,
-        sentence: sent,
-        score: scor,
-        accuracy: accu
-    };
-
+pub fn insert_question(conn: &postgres::Connection, title: String, sentence: String, score: i16, accuracy: i16) {
     let rows_updated = conn.execute(
         "INSERT INTO question (title, sentence, score, accuracy) VALUES ($1, $2, $3, $4)",
-         &[&data.title, &data.sentence, &data.score, &data.accuracy]).unwrap();
+         &[&title, &sentence, &score, &accuracy]).unwrap();
 
-    println!("{} rows updated", rows_updated);
+    //println!("{} rows updated", rows_updated);
 }
 
 
 //ユーザー情報取り出し(比較部分で使う)
-pub fn select_userdata(conn: &postgres::Connection, user: String)-> bool {
+pub fn is_user_exists(conn: &postgres::Connection, user: String)-> bool {
     //usernameはuniqueなのでfor文じゃなくてもいいかも
     for row in &conn.query("SELECT username FROM userdata WHERE username = $1", &[&user]).unwrap() {
         return true;
     }
     false
 }
-
-
-
-
-/*
-   // Run
-   stmt.execute(&[&me.counter]).ok().expect("Inserting counter failed");
-
-   for row in &conn.query("SELECT id, hoge FROM hoge", &[]).unwrap() {
-       let counter = Counter {
-           id: row.get(0),
-           counter: row.get(1)
-       };
-       println!("Found hoge {}", counter.counter);
-   }*/
