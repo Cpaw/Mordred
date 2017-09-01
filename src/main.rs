@@ -9,16 +9,30 @@ use router::Router;
 mod hello_world;
 mod set_greeting;
 
+
+/*
 #[derive(RustcEncodable, RustcDecodable)]
 struct Greeting {
     msg: String
 }
+*/
+extern crate postgres;
+use postgres::{Connection, TlsMode};
+
+struct Counter {
+    id: i32,
+    counter: i16,
+}
+
 
 fn main() {
+    /*
     let mut router = Router::new();
 
     router.get("/", hello_world::hello_world, "hello_world");
     router.post("/set", set_greeting::set_greeting, "set_greeting");
+    */
+
 
     /*
     fn hello_world(_: &mut Request) -> IronResult<Response> {
@@ -42,6 +56,51 @@ fn main() {
     }
     */
 
+    /*
     Iron::new(router).http("localhost:3000").unwrap();
     println!("on 3000");
+    */
+
+    let dsn = "postgres://dev:secret@localhost";
+       let conn = match Connection::connect(dsn, TlsMode::None) {
+           Ok(conn) => conn,
+           Err(e) => {
+               println!("Connection error: {}", e);
+               return;
+           }
+       };
+
+       // Create Table
+       conn.execute("CREATE TABLE hoge (
+         id SERIAL,
+         hoge SMALLINT NOT NULL DEFAULT 0
+         )",
+       &[]).unwrap();
+
+       // Counter type
+       let me = Counter {
+           id: 0,
+           counter: 1
+       };
+
+       // Interting
+       let stmt = match conn.prepare("INSERT INTO hoge (hoge) VALUES ($1)") {
+           Ok(stmt) => stmt,
+           Err(e) => {
+               println!("Preparing query failed: {}", e);
+               return;
+           }
+       };
+
+       // Run
+       stmt.execute(&[&me.counter]).ok().expect("Inserting counter failed");
+
+       for row in &conn.query("SELECT id, hoge FROM hoge", &[]).unwrap() {
+           let counter = Counter {
+               id: row.get(0),
+               counter: row.get(1)
+           };
+           println!("Found hoge {}", counter.counter);
+       }
+
 }

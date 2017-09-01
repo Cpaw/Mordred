@@ -7,4 +7,4 @@ authors = ["palloc <palloc.mknet10@gmail.com>"]
 iron = "*"
 rustc-serialize = "*"
 router = "*"
-
+postgres = "*"
