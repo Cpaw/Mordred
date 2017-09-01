@@ -39,8 +39,8 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::process;
 
-struct User {
-    name: String
+struct Login {
+    username: String
 }
 
 
@@ -52,31 +52,54 @@ struct Problem {
     p5: u16,
 }
 
+// セッション情報
+impl iron_sessionstorage::Value for Login {
+    fn get_key() -> &'static str { "logged_in_user" }
+    fn into_raw(self) -> String { self.username }
+    fn from_raw(value: String) -> Option<Self> {
+        if value.is_empty() {
+            None
+        } else {
+            Some(Login { username: value })
+        }
+    }
+}
+
 // ログイン処理
 fn login(req: &mut Request) -> IronResult<Response> {
-    let status = "ok".to_string();
+    let mut status: bool = false;
+    if try!(req.session().get::<Login>()).is_some() {
+        status = true;
+    }
     Ok(Response::with((
         ContentType::json().0,
         status::Ok,
-        "text/html".parse::<iron::mime::Mime>().unwrap(),
         format!("{{\"status\": {}}}", status)
-        // ログインしているかどうか確認する処理を書く
     )))
 }
 
 // ユーザログイン
 fn login_post(req: &mut Request) -> IronResult<Response> {
+    let username = {
+        let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
+        iexpect!(formdata.get("username"))[0].to_owned()
+    };
+    // ↓の処理をdbのユーザ情報とマッチングしてから実行するようにする
+    try!(req.session().set(Login { username: username }));
+    let mut status: bool = true;
     Ok(Response::with((
         status::Ok,
-        format!("test")
+        format!("{{\"status\": {}}}", status)
     )))
 }
 
 // ログアウト
 fn logout(req: &mut Request) -> IronResult<Response> {
+    try!(req.session().clear());
+    let mut status: bool = true;
     Ok(Response::with((
         status::Ok,
-        format!("test")
+        format!("{{\"status\": {}}}", status)
     )))
 }
 
@@ -112,21 +135,22 @@ fn problem(req: &mut Request) -> IronResult<Response> {
 
 // 問題回答
 fn answer(req: &mut Request) -> IronResult<Response> {
-//    let ref router = req.extensions.get::<Router>();
     let mut payload = String::new();
-    let json_body = req.get::<bodyparser::Json>();
+    {
+        let ref router = &req.extensions.get::<Router>();
+        let ref problem_id = router
+            .unwrap()
+            .find("id")
+            .unwrap();
+        
+        //受け取ったデータをstringでpayloadに格納
+        req.body.read_to_string(&mut payload);
+        let v: Value = serde_json::to_value(payload);
+    }
+
+    let mut json_body = &mut req.get::<bodyparser::Json>();
     println!("{:?}", json_body);
 
-//    let ref problem_id = router
-//        .unwrap()
-//        .find("id")
-//        .unwrap();
-
-    //受け取ったデータをstringでpayloadに格納
-//    req.body.read_to_string(&mut payload);
-//    let v: Value = serde_json::to_value(payload);
-
-//    println!("{}", v);
     Ok(Response::with((
         status::Ok,
         format!("test")
@@ -140,16 +164,12 @@ fn user(req: &mut Request) -> IronResult<Response> {
     )))
 }
 
-
-
-
 fn main() {
-    /*
     // ルーティング作成
     let router = router!(
         login: get "/login" => login,
         login_post: post "/login" => login_post,
-        logout: post "/logout" => logout,
+        logout: get "/logout" => logout,
         regist: post "/regist" => register,
         user: get "/user" => user,
         problems: get "/problems" => problems,
@@ -161,7 +181,7 @@ fn main() {
     let mut ch = Chain::new(router);
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let _res = Iron::new(ch).http("localhost:3000").unwrap();
-    println!("on 3000");*/
+    println!("on 3000");
 
 
     //PostgreSQL
@@ -175,18 +195,17 @@ fn main() {
      };
 
     //database_init(&conn);
-    /*
+
     insert_userdata(&conn, "金田".to_string(), "gomigomi".to_string());
     insert_userdata(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
     insert_userdata(&conn, "吉岡".to_string(), "1234567890".to_string());
-    */
+
 
 
 
     insert_question(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
 
 
-/*
     let res = is_user_exists(&conn, "山田".to_string());
 
     if res == true{
@@ -198,5 +217,5 @@ fn main() {
 
     let id: i32 = 1;
     let username = "山田".to_string();
-    add_score(&conn, id, username);*/
+    add_score(&conn, id, username);
 }
