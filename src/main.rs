@@ -139,6 +139,9 @@ fn user(req: &mut Request) -> IronResult<Response> {
         format!("test")
     )))
 }
+*/
+
+
 
 fn main() {
     // ルーティング作成
@@ -157,19 +160,37 @@ fn main() {
     let mut ch = Chain::new(router);
     ch.link_around(SessionStorage::new(SignedCookieBackend::new(my_secret)));
     let _res = Iron::new(ch).http("localhost:3000").unwrap();
-    println!("on 3000");
+    println!("on 3000");*/
 
 
     //PostgreSQL
-//    let dsn = "postgres://dev:secret@localhost";
-//       let conn = match Connection::connect(dsn, TlsMode::None) {
-//           Ok(conn) => conn,
-//           Err(e) => {
-//              println!("Connection error: {}", e);
-//               return;
-//           }
-//       };
+    let dsn = "postgres://dev:secret@localhost";
+       let conn = match Connection::connect(dsn, TlsMode::None) {
+           Ok(conn) => conn,
+           Err(e) => {
+               println!("Connection error: {}", e);
+               return;
+        }
+     };
+
+    //database_init(&conn);
+    let username = "山田".to_string();
+    let password = "hage".to_string();
+    insert_userdata(&conn, username, password);
+
+    let title = "うあああああああ".to_string();
+    let sentence = "hogehogehogehoge".to_string();
+    let score = 10;
+    let accuracy = 20;
+    insert_question(&conn, title, sentence, score, accuracy);
 
 
-//    create_hoge_table(&conn);
+
+    let res = select_userdata(&conn, "山田".to_string());
+
+    if res == true{
+        println!("登録済み");
+    }else{
+        println!("いないよ");
+    }
 }
