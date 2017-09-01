@@ -84,8 +84,8 @@ fn login_post(req: &mut Request) -> IronResult<Response> {
         let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
         iexpect!(formdata.get("username"))[0].to_owned()
     };
-    // ↓の処理をdbのユーザ情報とマッチングしてから実行するようにする
 
+    // postgreのコネクション作成
     let dsn = "postgres://dev:secret@localhost";
     let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
 
@@ -113,6 +113,17 @@ fn logout(req: &mut Request) -> IronResult<Response> {
 
 // ユーザ登録
 fn register(req: &mut Request) -> IronResult<Response> {
+    let (username, password) = {
+        let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
+        (iexpect!(formdata.get("username"))[0].to_owned(), iexpect!(formdata.get("password"))[0].to_owned())
+    };
+
+    // postgreのコネクション作成
+    let dsn = "postgres://dev:secret@localhost";
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+
+    insert_userdata(&conn, username, password);
+
     Ok(Response::with((
         status::Ok,
         format!("test")
