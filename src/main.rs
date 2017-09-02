@@ -132,6 +132,12 @@ fn register(req: &mut Request) -> IronResult<Response> {
 
 // 問題一覧
 fn problems(req: &mut Request) -> IronResult<Response> {
+    // postgreのコネクション作成
+    let dsn = "postgres://dev:secret@localhost";
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+
+    let problems = show_problem(&conn);
+    println!("{:?}", problems);
     Ok(Response::with((
         status::Ok,
         format!("test")
