@@ -11,16 +11,16 @@ pub struct Userdata{
 }
 
 //idは自動採番
-pub struct Question{
+pub struct Promblem{
     pub id: i32,
     pub title: String,
-    pub sentence: String,
+    pub description: String,
     pub score: i16,
     pub accuracy: f64,
 }
 
 
-//データベース初期化(UserdataテーブルとQuestionテーブルの作成)
+//データベース初期化(Userdataテーブルとproblemテーブルの作成)
 pub fn database_init(conn: &postgres::Connection){
     conn.batch_execute("
         CREATE TABLE userdata(
@@ -30,10 +30,10 @@ pub fn database_init(conn: &postgres::Connection){
             score int2 not null default 0
         );
 
-        CREATE TABLE question(
+        CREATE TABLE problem(
           id serial primary key,
           title varchar,
-          sentence text,
+          description text,
           score int2,
           accuracy float8
       );
@@ -49,16 +49,16 @@ pub fn insert_userdata(conn: &postgres::Connection, username: String, password: 
 }
 
 //問題の登録
-pub fn insert_question(conn: &postgres::Connection, title: String, sentence: String, score: i16, accuracy: f64) {
+pub fn insert_problem(conn: &postgres::Connection, title: String, description: String, score: i16, accuracy: f64) {
     let rows_updated = conn.execute(
-        "INSERT INTO question (title, sentence, score, accuracy) VALUES ($1, $2, $3, $4)",
-         &[&title, &sentence, &score, &accuracy]).unwrap();
+        "INSERT INTO problem (title, description, score, accuracy) VALUES ($1, $2, $3, $4)",
+         &[&title, &description, &score, &accuracy]).unwrap();
 }
 
 //問題の削除
-pub fn delete_question(conn: &postgres::Connection, id: i32){
+pub fn delete_problem(conn: &postgres::Connection, id: i32){
     let rows_updated = conn.execute(
-        "DELETE FROM question WHERE id = $1",
+        "DELETE FROM problem WHERE id = $1",
          &[&id]).unwrap();
 }
 
@@ -78,11 +78,13 @@ pub fn is_user_exists(conn: &postgres::Connection, user: String, pass: String)->
 //}_
 
 //Cookie登録
-//pub fn set_cookie
+pub fn set_cookie(conn: &postgres::Connection, id: i32, username: String){
+
+}
 
 //ユーザーにスコア加算(問題ID, ユーザー名)
 pub fn add_score(conn: &postgres::Connection, id: i32, username: String){
     let rows_updated = conn.execute(
-        "UPDATE userdata SET score = score + (SELECT score FROM question WHERE id = $1) WHERE username = $2",
+        "UPDATE userdata SET score = score + (SELECT score FROM problem WHERE id = $1) WHERE username = $2",
          &[&id, &username]).unwrap();
 }

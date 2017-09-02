@@ -177,16 +177,27 @@ fn answer(req: &mut Request) -> IronResult<Response> {
 
 //問題追加
 fn add_problem(req: &mut Request) -> IronResult<Response> {
-    let ref router = req.extensions.get::<Router>();
-    let ref id = router
-        .unwrap()
-        .find("id")
-        .unwrap();
-        
+    // ここにあとでadminユーザでログインしているかの判定を付け加える
+
+    let (title, description, score, accuracy) = {
+        let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
+        (iexpect!(formdata.get("title"))[0].to_owned(),
+         iexpect!(formdata.get("description"))[0].to_owned(),
+         iexpect!(formdata.get("score"))[0].to_owned(),
+         iexpect!(formdata.get("accuracy"))[0].to_owned()
+        )
+    };
+
+    // postgreのコネクション作成
+    let dsn = "postgres://dev:secret@localhost";
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+
+    insert_problem(&conn, title.to_string(), description.to_string(), score.parse::<i16>().unwrap(), accuracy.parse::<f64>().unwrap());
+    let status: bool = true;
 
     return Ok(Response::with(
         (status::Ok,
-         format!("Hello {}", problem_id).as_str()
+         format!("{{\"status\": {}}}", status)
         )))
 }
 
@@ -207,7 +218,7 @@ fn main() {
         user: get "/user" => user,
         problems: get "/problems" => problems,
         problem: get "/problem/:id" => problem,
-        problem: post "/problem/:id" => add_problem,
+        add_problem: post "/problem/" => add_problem,
         answer: post "/problem/:id" => answer,
     );
 
@@ -228,20 +239,20 @@ fn main() {
         }
      };
 
-/*
+
     database_init(&conn);
 
     insert_userdata(&conn, "金田".to_string(), "gomigomi".to_string());
     insert_userdata(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
     insert_userdata(&conn, "吉岡".to_string(), "1234567890".to_string());
-*/
-/*
-    //insert_question(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
-    insert_question(&conn, "問題2".to_string(), "いいいいいいいいいいいいいい".to_string(), 100, 0.045);
-    insert_question(&conn, "question3".to_string(), "uuuuuuuuuuuuuuu".to_string(), 150, 33.387);
 
 
-    let res = is_user_exists(&conn, "山田".to_string());
+    //insert_problem(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
+    insert_problem(&conn, "問題2".to_string(), "いいいいいいいいいいいいいい".to_string(), 100, 0.045);
+    insert_problem(&conn, "problem3".to_string(), "uuuuuuuuuuuuuuu".to_string(), 150, 33.387);
+
+
+    let res = is_user_exists(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
 
     if res == true{
         println!("登録済み");
@@ -253,7 +264,7 @@ fn main() {
     let id: i32 = 1;
     let username = "山田".to_string();
     add_score(&conn, id, username);
-    delete_question(&conn, 2);
-*/
+    delete_problem(&conn, 2);
+
 
 }
