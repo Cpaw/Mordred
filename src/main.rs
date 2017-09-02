@@ -138,6 +138,12 @@ fn problems(req: &mut Request) -> IronResult<Response> {
 
     let problems = show_problem(&conn);
     println!("{:?}", problems);
+
+    let mut res = HashMap::new();
+    for problem in problems {
+        res.insert(problem.get(0), problem.get(1));
+    }
+    println!("{:?}", res);
     Ok(Response::with((
         status::Ok,
         format!("test")
