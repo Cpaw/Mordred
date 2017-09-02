@@ -177,16 +177,27 @@ fn answer(req: &mut Request) -> IronResult<Response> {
 
 //問題追加
 fn add_problem(req: &mut Request) -> IronResult<Response> {
-    let ref router = req.extensions.get::<Router>();
-    let ref id = router
-        .unwrap()
-        .find("id")
-        .unwrap();
-        
+    // ここにあとでadminユーザでログインしているかの判定を付け加える
+    
+    let (title, description, score, accuracy) = {
+        let formdata = iexpect!(req.get_ref::<UrlEncodedBody>().ok());
+        (iexpect!(formdata.get("title"))[0].to_owned(),
+         iexpect!(formdata.get("description"))[0].to_owned(),
+         iexpect!(formdata.get("score"))[0].to_owned(),
+         iexpect!(formdata.get("accuracy"))[0].to_owned()
+        )
+    };
 
+    // postgreのコネクション作成
+    let dsn = "postgres://dev:secret@localhost";
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+
+    insert_question(&conn, title.to_string(), description.to_string(), score.parse::<i16>().unwrap(), accuracy.parse::<f64>().unwrap());
+    let status: bool = true;
+    
     return Ok(Response::with(
         (status::Ok,
-         format!("Hello {}", problem_id).as_str()
+         format!("{{\"status\": {}}}", status)
         )))
 }
 
@@ -207,7 +218,7 @@ fn main() {
         user: get "/user" => user,
         problems: get "/problems" => problems,
         problem: get "/problem/:id" => problem,
-        problem: post "/problem/:id" => add_problem,
+        add_problem: post "/problem/" => add_problem,
         answer: post "/problem/:id" => answer,
     );
 
