@@ -43,23 +43,44 @@ pub fn database_init(conn: &postgres::Connection){
 
 //ユーザーデータの登録
 pub fn insert_userdata(conn: &postgres::Connection, username: String, password: String) {
-    let rows_updated = conn.execute(
+    conn.execute(
         "INSERT INTO userdata (username, password) VALUES ($1, $2)",
-         &[&username, &password]).unwrap();
+        &[&username, &password]).unwrap();
 }
 
 //問題の登録
 pub fn insert_problem(conn: &postgres::Connection, title: String, description: String, score: i16, accuracy: f64) {
-    let rows_updated = conn.execute(
+    conn.execute(
         "INSERT INTO problem (title, description, score, accuracy) VALUES ($1, $2, $3, $4)",
-         &[&title, &description, &score, &accuracy]).unwrap();
+        &[&title, &description, &score, &accuracy]).unwrap();
 }
 
 //問題の削除
 pub fn delete_problem(conn: &postgres::Connection, id: i32){
-    let rows_updated = conn.execute(
+    conn.execute(
         "DELETE FROM problem WHERE id = $1",
-         &[&id]).unwrap();
+        &[&id]).unwrap();
+}
+
+//問題一覧(id, title)
+pub fn show_problem(conn: &postgres::Connection)->Vec<(i32, String)>{
+/*
+    let mut num:i64 = 0;
+
+    //問題数取得
+    for row in &conn.query("SELECT COUNT(*) FROM problem", &[]).unwrap() {
+        let temp: i64 = row.get("count");
+        num = temp;
+    }
+*/
+    let mut pairs = Vec::new();
+
+    for row in &conn.query("SELECT id, title FROM problem", &[]).unwrap() {
+        let id: i32 = row.get("id");
+        let title: String = row.get("title");
+        pairs.push((id, title));
+    }
+    return pairs;
 }
 
 
@@ -78,13 +99,14 @@ pub fn is_user_exists(conn: &postgres::Connection, user: String, pass: String)->
 //}_
 
 //Cookie登録
+/*
 pub fn set_cookie(conn: &postgres::Connection, id: i32, username: String){
 
-}
+}*/
 
 //ユーザーにスコア加算(問題ID, ユーザー名)
 pub fn add_score(conn: &postgres::Connection, id: i32, username: String){
-    let rows_updated = conn.execute(
+    conn.execute(
         "UPDATE userdata SET score = score + (SELECT score FROM problem WHERE id = $1) WHERE username = $2",
-         &[&id, &username]).unwrap();
+        &[&id, &username]).unwrap();
 }
