@@ -5,11 +5,12 @@ extern crate urlencoded;
 extern crate iron_sessionstorage;
 extern crate mime;
 extern crate csv;
-extern crate serde_json;
 extern crate bodyparser;
 extern crate persistent;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
 
 use std::io::Read;
 use iron::status;
@@ -145,10 +146,11 @@ fn problems(req: &mut Request) -> IronResult<Response> {
     for problem in problems {
         res.insert(problem.0, problem.1);
     }
-    println!("{:?}", res);
+    let response = serde_json::to_string(&res);
+
     Ok(Response::with((
         status::Ok,
-        format!("test")
+        format!("{:?}", response)
     )))
 }
 
