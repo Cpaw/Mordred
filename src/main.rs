@@ -146,11 +146,11 @@ fn problems(req: &mut Request) -> IronResult<Response> {
     for problem in problems {
         res.insert(problem.0, problem.1);
     }
-    let response = serde_json::to_string(&res);
+    //let response = serde_json::to_string(&res);
 
     Ok(Response::with((
         status::Ok,
-        format!("{:?}", response)
+        format!("{:?}", res)
     )))
 }
 
