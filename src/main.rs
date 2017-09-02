@@ -175,6 +175,21 @@ fn answer(req: &mut Request) -> IronResult<Response> {
     )))
 }
 
+//問題追加
+fn add_problem(req: &mut Request) -> IronResult<Response> {
+    let ref router = req.extensions.get::<Router>();
+    let ref id = router
+        .unwrap()
+        .find("id")
+        .unwrap();
+        
+
+    return Ok(Response::with(
+        (status::Ok,
+         format!("Hello {}", problem_id).as_str()
+        )))
+}
+
 fn user(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((
         status::Ok,
@@ -192,6 +207,7 @@ fn main() {
         user: get "/user" => user,
         problems: get "/problems" => problems,
         problem: get "/problem/:id" => problem,
+        problem: post "/problem/:id" => add_problem,
         answer: post "/problem/:id" => answer,
     );
 
@@ -212,28 +228,32 @@ fn main() {
         }
      };
 
+/*
     database_init(&conn);
 
     insert_userdata(&conn, "金田".to_string(), "gomigomi".to_string());
     insert_userdata(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
     insert_userdata(&conn, "吉岡".to_string(), "1234567890".to_string());
+*/
+/*
+    //insert_question(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
+    insert_question(&conn, "問題2".to_string(), "いいいいいいいいいいいいいい".to_string(), 100, 0.045);
+    insert_question(&conn, "question3".to_string(), "uuuuuuuuuuuuuuu".to_string(), 150, 33.387);
 
 
+    let res = is_user_exists(&conn, "山田".to_string());
 
-
-    insert_question(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
-
-
-//    let res = is_user_exists(&conn, "山田".to_string());
-
-//    if res == true{
-//        println!("登録済み");
-//    }else{
-//        println!("いないよ");
-//    }
+    if res == true{
+        println!("登録済み");
+    }else{
+        println!("いないよ");
+    }
 
 
     let id: i32 = 1;
     let username = "山田".to_string();
     add_score(&conn, id, username);
+    delete_question(&conn, 2);
+*/
+
 }

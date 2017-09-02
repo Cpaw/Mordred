@@ -55,6 +55,13 @@ pub fn insert_question(conn: &postgres::Connection, title: String, sentence: Str
          &[&title, &sentence, &score, &accuracy]).unwrap();
 }
 
+//問題の削除
+pub fn delete_question(conn: &postgres::Connection, id: i32){
+    let rows_updated = conn.execute(
+        "DELETE FROM question WHERE id = $1",
+         &[&id]).unwrap();
+}
+
 
 //ユーザー情報取り出し(比較部分で使う)
 pub fn is_user_exists(conn: &postgres::Connection, user: String, pass: String)-> bool {
