@@ -39,6 +39,8 @@ use std::ffi::OsString;
 use std::fs::File;
 use std::process;
 
+use std::collections::HashMap;
+
 struct Login {
     username: String
 }
@@ -141,7 +143,7 @@ fn problems(req: &mut Request) -> IronResult<Response> {
 
     let mut res = HashMap::new();
     for problem in problems {
-        res.insert(problem.get(0), problem.get(1));
+        res.insert(problem.0, problem.1);
     }
     println!("{:?}", res);
     Ok(Response::with((
@@ -251,7 +253,7 @@ fn main() {
         }
      };
 
-
+/*
     database_init(&conn);
 
     insert_userdata(&conn, "金田".to_string(), "gomigomi".to_string());
@@ -277,6 +279,6 @@ fn main() {
     let username = "山田".to_string();
     add_score(&conn, id, username);
     delete_problem(&conn, 2);
-
+*/
 
 }
