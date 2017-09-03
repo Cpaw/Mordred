@@ -23,6 +23,9 @@ pub struct Promblem{
 //データベース初期化(Userdataテーブルとproblemテーブルの作成)
 pub fn database_init(conn: &postgres::Connection){
     conn.batch_execute("
+        DROP TABLE IF EXISTS userdata CASCADE;
+        DROP TABLE IF EXISTS problem CASCADE;
+
         CREATE TABLE userdata(
             username varchar not null unique,
             password varchar not null,
@@ -63,7 +66,7 @@ pub fn delete_problem(conn: &postgres::Connection, id: i32){
 }
 
 //問題一覧(id, title)
-pub fn show_problem(conn: &postgres::Connection)->Vec<(i32, String)>{
+pub fn show_problems(conn: &postgres::Connection)->Vec<(i32, String)>{
 /*
     let mut num:i64 = 0;
 
@@ -91,6 +94,16 @@ pub fn is_user_exists(conn: &postgres::Connection, user: String, pass: String)->
         return true;
     }
     false
+}
+
+//問題詳細を返す
+pub fn get_description(conn: &postgres::Connection, id: i32)-> String {
+    //ユーザー名は重複しない
+    for row in &conn.query("SELECT description FROM problem WHERE id = $1", &[&id]).unwrap() {
+        let description: String  = row.get("description");
+        return description;
+    }
+    "".to_string()
 }
 
 
