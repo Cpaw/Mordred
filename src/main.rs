@@ -13,8 +13,6 @@ extern crate serde_derive;
 extern crate serde_json;
 
 use std::io::Read;
-use iron::status;
-use iron::modifiers::Redirect;
 use router::{Router, url_for};
 use rustc_serialize::json;
 use iron_sessionstorage::traits::*;
@@ -41,6 +39,16 @@ use std::fs::File;
 use std::process;
 
 use std::collections::HashMap;
+
+extern crate params;
+extern crate handlebars_iron as hbs;
+extern crate handlebars;
+use handlebars::Handlebars;
+use hbs::{Template};
+use std::io::prelude::*;
+use iron::{headers, status};
+use std::path::Path;
+use iron::modifiers::{Redirect,Header};
 
 struct Login {
     username: String
@@ -224,6 +232,104 @@ fn user(req: &mut Request) -> IronResult<Response> {
     )))
 }
 
+
+fn template_html(filename: &str) -> Handlebars {
+    let mut handlebars = Handlebars::new();
+
+    handlebars
+        .register_template_file(filename, &Path::new(&["templates/", filename].join("")))
+        .ok()
+        .unwrap();
+
+    handlebars
+        .register_template_file("base", &Path::new("templates/base.hbs"))
+        .ok()
+        .unwrap();
+    handlebars
+}
+
+fn response_html(html: String) -> Response {
+   Response::new()
+       .set(status::Ok)
+       .set(Header(headers::ContentType::html()))
+       .set(html)
+}
+
+fn upload (_: &mut Request) -> IronResult<Response> {
+    println!("[+] GET /upload");
+    let filename = "upload.hbs";
+    let handlebars = template_html(filename);
+    let data = json!({
+        "parent": "base",
+        "css": "",
+    });
+
+    let html_str = handlebars.render(filename, &data).unwrap_or_else(
+        |e| format!("{}", e),
+    );
+
+    Ok(response_html(html_str))
+}
+
+
+fn upload_up(req: &mut Request) -> IronResult<Response> {
+    use params::{Params, Value};
+    println!("[+] POST /upload");
+
+    //bodyparserじゃmultipart/form-dataのデータ受け取れない
+    //println!("{:?}", req.get::<bodyparser::Raw>());
+
+    //println!("Params = {:?}",req.get_ref::<Params>().unwrap());
+    let filename = "upload.hbs";
+    let handlebars = template_html(filename);
+    let data = json!({
+        "parent": "base",
+        "css": "",
+    });
+
+    let html_str = handlebars.render(filename, &data).unwrap_or_else(
+        |e| format!("{}", e),
+    );
+
+    let map = req.get_ref::<Params>().unwrap();
+
+    //println!("file1 = {:?}",map.find(&["file1"]));
+
+    match map.find(&["file1"]){
+        Some(&Value::File(ref file)) => {
+            //println!("{:?}",file.path.to_string_lossy());
+            //println!("{}",file.path.as_path());
+
+            let path = file.path.as_path();
+            let display = path.display();
+
+            // pathを読み込み専用モードで開く。これは`io::Result<File>`を返す。
+            let mut file = match File::open(&path) {
+                // `io::Error`の`description`メソッドはエラーを説明する文字列を返す。
+                Err(why) => panic!("couldn't open {}: {}", display, Error::description(&why)),
+                Ok(file) => file,
+            };
+
+            // ファイルの中身を文字列に読み込む。`io::Result<useize>`を返す。
+            let mut s = String::new();
+            match file.read_to_string(&mut s) {
+                Err(why) => panic!("couldn't read {}: {}", display, Error::description(&why)),
+                Ok(_) => {
+                    if s != "" {
+                        print!("{} contains:\n{}", display, s);
+                    }
+                }
+            }
+
+        }
+        _ => println!("hoge"),
+    }
+    Ok(response_html(html_str))
+}
+
+
+
+
 fn main() {
     // ルーティング作成
     let router = router!(
@@ -236,6 +342,9 @@ fn main() {
         problem: get "/problem/:id" => problem,
         add_problem: post "/problem/" => add_problem,
         answer: post "/problem/:id" => answer,
+
+        upload: get "/upload" => upload,
+        upload_up: post "/upload" => upload_up,
     );
 
     let my_secret = b"verysecret".to_vec();
