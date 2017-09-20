@@ -44,7 +44,6 @@ extern crate params;
 extern crate handlebars_iron as hbs;
 extern crate handlebars;
 use handlebars::Handlebars;
-use hbs::{Template};
 use std::io::prelude::*;
 use iron::{headers, status};
 use std::path::Path;
@@ -233,46 +232,8 @@ fn user(req: &mut Request) -> IronResult<Response> {
 }
 
 
-fn template_html(filename: &str) -> Handlebars {
-    let mut handlebars = Handlebars::new();
 
-    handlebars
-        .register_template_file(filename, &Path::new(&["templates/", filename].join("")))
-        .ok()
-        .unwrap();
-
-    handlebars
-        .register_template_file("base", &Path::new("templates/base.hbs"))
-        .ok()
-        .unwrap();
-    handlebars
-}
-
-fn response_html(html: String) -> Response {
-   Response::new()
-       .set(status::Ok)
-       .set(Header(headers::ContentType::html()))
-       .set(html)
-}
-
-fn upload (_: &mut Request) -> IronResult<Response> {
-    println!("[+] GET /upload");
-    let filename = "upload.hbs";
-    let handlebars = template_html(filename);
-    let data = json!({
-        "parent": "base",
-        "css": "",
-    });
-
-    let html_str = handlebars.render(filename, &data).unwrap_or_else(
-        |e| format!("{}", e),
-    );
-
-    Ok(response_html(html_str))
-}
-
-
-fn upload_up(req: &mut Request) -> IronResult<Response> {
+fn upload(req: &mut Request) -> IronResult<Response> {
     use params::{Params, Value};
     println!("[+] POST /upload");
 
@@ -280,22 +241,13 @@ fn upload_up(req: &mut Request) -> IronResult<Response> {
     //println!("{:?}", req.get::<bodyparser::Raw>());
 
     //println!("Params = {:?}",req.get_ref::<Params>().unwrap());
-    let filename = "upload.hbs";
-    let handlebars = template_html(filename);
-    let data = json!({
-        "parent": "base",
-        "css": "",
-    });
 
-    let html_str = handlebars.render(filename, &data).unwrap_or_else(
-        |e| format!("{}", e),
-    );
 
     let map = req.get_ref::<Params>().unwrap();
 
-    //println!("file1 = {:?}",map.find(&["file1"]));
+    //println!("file = {:?}",map.find(&["file"]));
 
-    match map.find(&["file1"]){
+    match map.find(&["file"]){
         Some(&Value::File(ref file)) => {
             //println!("{:?}",file.path.to_string_lossy());
             //println!("{}",file.path.as_path());
@@ -322,9 +274,9 @@ fn upload_up(req: &mut Request) -> IronResult<Response> {
             }
 
         }
-        _ => println!("hoge"),
+        _ => println!(""),
     }
-    Ok(response_html(html_str))
+    Ok(Response::with((status::Ok, "Uploaded!")))
 }
 
 
@@ -343,8 +295,7 @@ fn main() {
         add_problem: post "/problem/" => add_problem,
         answer: post "/problem/:id" => answer,
 
-        upload: get "/upload" => upload,
-        upload_up: post "/upload" => upload_up,
+        upload: post "/upload" => upload,
     );
 
     let my_secret = b"verysecret".to_vec();
