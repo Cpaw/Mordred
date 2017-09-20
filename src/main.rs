@@ -269,9 +269,9 @@ fn upload(req: &mut Request) -> IronResult<Response> {
                 Err(why) => panic!("couldn't read {}: {}", display, Error::description(&why)),
                 Ok(_) => {
                     if s != "" {
-                        for var in csv_parser::parse(s.as_str()){
-                            println!("{}",var[0]);
-                        }
+                        let splitted = csv_parser::parse(s.as_str()); //Stringだとlifetimeの関係上引数で渡せない
+                        println!("splitted = {:?}", splitted);
+                        println!("{}",csv_parser::check(splitted, 3));
                     }
                 }
             }
