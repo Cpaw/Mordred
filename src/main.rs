@@ -31,6 +31,7 @@ mod sql;
 use sql::*;
 mod hello_world;
 mod set_greeting;
+mod csv_parser;
 
 use std::env;
 use std::error::Error;
@@ -268,7 +269,9 @@ fn upload(req: &mut Request) -> IronResult<Response> {
                 Err(why) => panic!("couldn't read {}: {}", display, Error::description(&why)),
                 Ok(_) => {
                     if s != "" {
-                        print!("{} contains:\n{}", display, s);
+                        for var in csv_parser::parse(s.as_str()){
+                            println!("{}",var[0]);
+                        }
                     }
                 }
             }
