@@ -5,15 +5,14 @@ extern crate urlencoded;
 extern crate iron_sessionstorage;
 extern crate mime;
 extern crate csv;
-extern crate serde_json;
 extern crate bodyparser;
 extern crate persistent;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate serde_json;
 
 use std::io::Read;
-use iron::status;
-use iron::modifiers::Redirect;
 use router::{Router, url_for};
 use rustc_serialize::json;
 use iron_sessionstorage::traits::*;
@@ -32,12 +31,24 @@ mod sql;
 use sql::*;
 mod hello_world;
 mod set_greeting;
+mod csv_parser;
 
 use std::env;
 use std::error::Error;
 use std::ffi::OsString;
 use std::fs::File;
 use std::process;
+
+use std::collections::HashMap;
+
+extern crate params;
+extern crate handlebars_iron as hbs;
+extern crate handlebars;
+use handlebars::Handlebars;
+use std::io::prelude::*;
+use iron::{headers, status};
+use std::path::Path;
+use iron::modifiers::{Redirect,Header};
 
 struct Login {
     username: String
@@ -132,9 +143,22 @@ fn register(req: &mut Request) -> IronResult<Response> {
 
 // 問題一覧
 fn problems(req: &mut Request) -> IronResult<Response> {
+    // postgreのコネクション作成
+    let dsn = "postgres://dev:secret@localhost";
+    let conn = Connection::connect(dsn, TlsMode::None).unwrap();;
+
+    let problems = show_problems(&conn);
+    println!("{:?}", problems);
+
+    let mut res = HashMap::new();
+    for problem in problems {
+        res.insert(problem.0, problem.1);
+    }
+    //let response = serde_json::to_string(&res);
+
     Ok(Response::with((
         status::Ok,
-        format!("test")
+        format!("{:?}", res)
     )))
 }
 
@@ -208,6 +232,59 @@ fn user(req: &mut Request) -> IronResult<Response> {
     )))
 }
 
+
+
+fn upload(req: &mut Request) -> IronResult<Response> {
+    use params::{Params, Value};
+    println!("[+] POST /upload");
+
+    //bodyparserじゃmultipart/form-dataのデータ受け取れない
+    //println!("{:?}", req.get::<bodyparser::Raw>());
+
+    //println!("Params = {:?}",req.get_ref::<Params>().unwrap());
+
+
+    let map = req.get_ref::<Params>().unwrap();
+
+    //println!("file = {:?}",map.find(&["file"]));
+
+    match map.find(&["file"]){
+        Some(&Value::File(ref file)) => {
+            //println!("{:?}",file.path.to_string_lossy());
+            //println!("{}",file.path.as_path());
+
+            let path = file.path.as_path();
+            let display = path.display();
+
+            // pathを読み込み専用モードで開く。これは`io::Result<File>`を返す。
+            let mut file = match File::open(&path) {
+                // `io::Error`の`description`メソッドはエラーを説明する文字列を返す。
+                Err(why) => panic!("couldn't open {}: {}", display, Error::description(&why)),
+                Ok(file) => file,
+            };
+
+            // ファイルの中身を文字列に読み込む。`io::Result<useize>`を返す。
+            let mut s = String::new();
+            match file.read_to_string(&mut s) {
+                Err(why) => panic!("couldn't read {}: {}", display, Error::description(&why)),
+                Ok(_) => {
+                    if s != "" {
+                        let splitted = csv_parser::parse(s.as_str()); //Stringだとlifetimeの関係上引数で渡せない
+                        println!("splitted = {:?}", splitted);
+                        println!("{}",csv_parser::check(splitted, 3));
+                    }
+                }
+            }
+
+        }
+        _ => println!(""),
+    }
+    Ok(Response::with((status::Ok, "Uploaded!")))
+}
+
+
+
+
 fn main() {
     // ルーティング作成
     let router = router!(
@@ -220,6 +297,8 @@ fn main() {
         problem: get "/problem/:id" => problem,
         add_problem: post "/problem/" => add_problem,
         answer: post "/problem/:id" => answer,
+
+        upload: post "/upload" => upload,
     );
 
     let my_secret = b"verysecret".to_vec();
@@ -246,25 +325,11 @@ fn main() {
     insert_userdata(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
     insert_userdata(&conn, "吉岡".to_string(), "1234567890".to_string());
 
-
-    //insert_problem(&conn, "くそ2".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
+    insert_problem(&conn, "問題1".to_string(), "あああああああああああああ".to_string(), 30, 50.356);
     insert_problem(&conn, "問題2".to_string(), "いいいいいいいいいいいいいい".to_string(), 100, 0.045);
     insert_problem(&conn, "problem3".to_string(), "uuuuuuuuuuuuuuu".to_string(), 150, 33.387);
 
-
-    let res = is_user_exists(&conn, "山田".to_string(), "nemiiiiiiii".to_string());
-
-    if res == true{
-        println!("登録済み");
-    }else{
-        println!("いないよ");
-    }
-
-
-    let id: i32 = 1;
-    let username = "山田".to_string();
-    add_score(&conn, id, username);
-    delete_problem(&conn, 2);
+    println!("{}", get_description(&conn, 2));
 
 
 }
